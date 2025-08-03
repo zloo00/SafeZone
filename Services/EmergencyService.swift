@@ -9,9 +9,14 @@ class EmergencyService: ObservableObject {
     
     private let locationManager: LocationManager
     private var emergencyTimer: Timer?
+    private var mediaRecordingService: MediaRecordingService?
     
     init(locationManager: LocationManager) {
         self.locationManager = locationManager
+    }
+    
+    func setMediaRecordingService(_ service: MediaRecordingService) {
+        self.mediaRecordingService = service
     }
     
     // MARK: - Emergency Activation
@@ -110,12 +115,12 @@ class EmergencyService: ObservableObject {
     // MARK: - Media Recording
     
     private func startMediaRecording() {
-        // TODO: Реализовать запись аудио/видео
+        mediaRecordingService?.startEmergencyRecording()
         print("Начинаем запись медиа")
     }
     
     private func stopMediaRecording() {
-        // TODO: Остановить запись медиа
+        mediaRecordingService?.stopEmergencyRecording()
         print("Останавливаем запись медиа")
     }
     

@@ -3,8 +3,11 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject var locationManager: LocationManager
     @EnvironmentObject var emergencyService: EmergencyService
+    @EnvironmentObject var biometricAuthService: BiometricAuthService
+    @EnvironmentObject var mediaRecordingService: MediaRecordingService
     @State private var showingSafetyTimer = false
     @State private var showingEmergencyAlert = false
+    @State private var showingBiometricAuth = false
     
     var body: some View {
         NavigationView {
@@ -55,8 +58,18 @@ struct HomeView: View {
                     
                     Spacer()
                     
-                    // Статус локации
-                    LocationStatusView()
+                    // Статус системы
+                    VStack(spacing: 10) {
+                        LocationStatusView()
+                        
+                        if mediaRecordingService.isRecording {
+                            RecordingStatusView()
+                        }
+                        
+                        if biometricAuthService.isBiometricAvailable {
+                            BiometricStatusView()
+                        }
+                    }
                 }
                 .padding()
             }
@@ -74,17 +87,27 @@ struct HomeView: View {
         } message: {
             Text("Вы уверены, что хотите активировать SOS сигнал? Это уведомит всех доверенных контактов.")
         }
+        .onAppear {
+            // Устанавливаем связь между сервисами
+            emergencyService.setMediaRecordingService(mediaRecordingService)
+        }
     }
 }
 
 // MARK: - SOS Button
 struct SOSButton: View {
     @EnvironmentObject var emergencyService: EmergencyService
+    @EnvironmentObject var biometricAuthService: BiometricAuthService
     @State private var showingAlert = false
+    @State private var showingBiometricAuth = false
     
     var body: some View {
         Button(action: {
-            showingAlert = true
+            if biometricAuthService.isBiometricAvailable {
+                showingBiometricAuth = true
+            } else {
+                showingAlert = true
+            }
         }) {
             ZStack {
                 Circle()
@@ -121,6 +144,15 @@ struct SOSButton: View {
         } message: {
             Text("Это отправит уведомление всем доверенным контактам с вашим местоположением.")
         }
+        .task {
+            if showingBiometricAuth {
+                let success = await biometricAuthService.authenticateUser(reason: "Подтвердите для активации SOS")
+                if success {
+                    emergencyService.activateSOS()
+                }
+                showingBiometricAuth = false
+            }
+        }
     }
 }
 
@@ -154,11 +186,17 @@ struct SafetyTimerButton: View {
 // MARK: - Manual Emergency Button
 struct ManualEmergencyButton: View {
     @EnvironmentObject var emergencyService: EmergencyService
+    @EnvironmentObject var biometricAuthService: BiometricAuthService
     @State private var showingAlert = false
+    @State private var showingBiometricAuth = false
     
     var body: some View {
         Button(action: {
-            showingAlert = true
+            if biometricAuthService.isBiometricAvailable {
+                showingBiometricAuth = true
+            } else {
+                showingAlert = true
+            }
         }) {
             VStack(spacing: 8) {
                 Image(systemName: "hand.raised.fill")
@@ -181,12 +219,22 @@ struct ManualEmergencyButton: View {
         } message: {
             Text("Активировать ручной режим экстренной помощи?")
         }
+        .task {
+            if showingBiometricAuth {
+                let success = await biometricAuthService.authenticateUser(reason: "Подтвердите для ручной активации")
+                if success {
+                    emergencyService.activateManualEmergency()
+                }
+                showingBiometricAuth = false
+            }
+        }
     }
 }
 
 // MARK: - Emergency Active View
 struct EmergencyActiveView: View {
     @EnvironmentObject var emergencyService: EmergencyService
+    @EnvironmentObject var mediaRecordingService: MediaRecordingService
     
     var body: some View {
         VStack(spacing: 15) {
@@ -205,6 +253,12 @@ struct EmergencyActiveView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
             
+            if mediaRecordingService.isRecording {
+                Text("Запись медиа: \(formatDuration(mediaRecordingService.recordingDuration))")
+                    .font(.caption)
+                    .foregroundColor(.blue)
+            }
+            
             Button("Остановить", role: .destructive) {
                 emergencyService.deactivateEmergency()
             }
@@ -214,6 +268,12 @@ struct EmergencyActiveView: View {
         .padding()
         .background(Color.red.opacity(0.1))
         .cornerRadius(20)
+    }
+    
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
+        return String(format: "%02d:%02d", minutes, seconds)
     }
 }
 
@@ -237,8 +297,58 @@ struct LocationStatusView: View {
     }
 }
 
+// MARK: - Recording Status View
+struct RecordingStatusView: View {
+    @EnvironmentObject var mediaRecordingService: MediaRecordingService
+    
+    var body: some View {
+        HStack {
+            Image(systemName: "record.circle")
+                .foregroundColor(.red)
+                .scaleEffect(1.2)
+                .animation(.easeInOut(duration: 1).repeatForever(autoreverses: true), value: mediaRecordingService.isRecording)
+            
+            Text("Запись медиа: \(formatDuration(mediaRecordingService.recordingDuration))")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(Color.red.opacity(0.1))
+        .cornerRadius(20)
+    }
+    
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+}
+
+// MARK: - Biometric Status View
+struct BiometricStatusView: View {
+    @EnvironmentObject var biometricAuthService: BiometricAuthService
+    
+    var body: some View {
+        HStack {
+            Image(systemName: biometricAuthService.getBiometricIcon())
+                .foregroundColor(biometricAuthService.isAuthenticated ? .green : .orange)
+            
+            Text("\(biometricAuthService.getBiometricTypeString()) \(biometricAuthService.isAuthenticated ? "активен" : "неактивен")")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .background(Color.secondary.opacity(0.1))
+        .cornerRadius(20)
+    }
+}
+
 #Preview {
     HomeView()
         .environmentObject(LocationManager())
         .environmentObject(EmergencyService(locationManager: LocationManager()))
+        .environmentObject(BiometricAuthService())
+        .environmentObject(MediaRecordingService())
 } 

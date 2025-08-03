@@ -2,9 +2,12 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject var locationManager: LocationManager
+    @EnvironmentObject var biometricAuthService: BiometricAuthService
+    @EnvironmentObject var mediaRecordingService: MediaRecordingService
     @State private var showingLocationPermission = false
     @State private var showingPrivacyPolicy = false
     @State private var showingAbout = false
+    @State private var showingBiometricAuth = false
     
     var body: some View {
         NavigationView {
@@ -40,6 +43,82 @@ struct SettingsView: View {
                             showingLocationPermission = true
                         }
                         .foregroundColor(.blue)
+                    }
+                }
+                
+                // Биометрическая аутентификация
+                if biometricAuthService.isBiometricAvailable {
+                    Section("Биометрическая аутентификация") {
+                        HStack {
+                            Image(systemName: biometricAuthService.getBiometricIcon())
+                                .foregroundColor(biometricAuthService.isAuthenticated ? .green : .orange)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(biometricAuthService.getBiometricTypeString())
+                                    .font(.headline)
+                                Text(biometricAuthService.isAuthenticated ? "Активна" : "Неактивна")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Button(biometricAuthService.isAuthenticated ? "Отключить" : "Активировать") {
+                                if biometricAuthService.isAuthenticated {
+                                    biometricAuthService.resetAuthentication()
+                                } else {
+                                    showingBiometricAuth = true
+                                }
+                            }
+                            .foregroundColor(biometricAuthService.isAuthenticated ? .red : .blue)
+                        }
+                    }
+                }
+                
+                // Медиа запись
+                Section("Медиа запись") {
+                    HStack {
+                        Image(systemName: mediaRecordingService.audioPermissionGranted ? "mic.fill" : "mic.slash")
+                            .foregroundColor(mediaRecordingService.audioPermissionGranted ? .green : .red)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Аудио запись")
+                                .font(.headline)
+                            Text(mediaRecordingService.audioPermissionGranted ? "Разрешено" : "Запрещено")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        if !mediaRecordingService.audioPermissionGranted {
+                            Button("Запросить") {
+                                mediaRecordingService.checkPermissions()
+                            }
+                            .foregroundColor(.blue)
+                        }
+                    }
+                    
+                    HStack {
+                        Image(systemName: mediaRecordingService.videoPermissionGranted ? "video.fill" : "video.slash")
+                            .foregroundColor(mediaRecordingService.videoPermissionGranted ? .green : .red)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Видео запись")
+                                .font(.headline)
+                            Text(mediaRecordingService.videoPermissionGranted ? "Разрешено" : "Запрещено")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        if !mediaRecordingService.videoPermissionGranted {
+                            Button("Запросить") {
+                                mediaRecordingService.checkPermissions()
+                            }
+                            .foregroundColor(.blue)
+                        }
                     }
                 }
                 
@@ -114,6 +193,15 @@ struct SettingsView: View {
                 }
             } message: {
                 Text("SafeZone нужен доступ к геолокации для отправки вашего местоположения доверенным контактам в случае экстренной ситуации.")
+            }
+            .task {
+                if showingBiometricAuth {
+                    let success = await biometricAuthService.authenticateUser(reason: "Подтвердите для активации биометрии")
+                    if !success {
+                        biometricAuthService.resetAuthentication()
+                    }
+                    showingBiometricAuth = false
+                }
             }
             .sheet(isPresented: $showingPrivacyPolicy) {
                 PrivacyPolicyView()
@@ -295,4 +383,6 @@ struct AboutView: View {
 #Preview {
     SettingsView()
         .environmentObject(LocationManager())
+        .environmentObject(BiometricAuthService())
+        .environmentObject(MediaRecordingService())
 } 

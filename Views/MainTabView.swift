@@ -3,6 +3,8 @@ import SwiftUI
 struct MainTabView: View {
     @StateObject private var locationManager = LocationManager()
     @StateObject private var emergencyService: EmergencyService
+    @StateObject private var biometricAuthService = BiometricAuthService()
+    @StateObject private var mediaRecordingService = MediaRecordingService()
     
     init() {
         let locationManager = LocationManager()
@@ -15,9 +17,18 @@ struct MainTabView: View {
             HomeView()
                 .environmentObject(locationManager)
                 .environmentObject(emergencyService)
+                .environmentObject(biometricAuthService)
+                .environmentObject(mediaRecordingService)
                 .tabItem {
                     Image(systemName: "house.fill")
                     Text("Главная")
+                }
+            
+            MapView()
+                .environmentObject(locationManager)
+                .tabItem {
+                    Image(systemName: "map.fill")
+                    Text("Карта")
                 }
             
             ContactsView()
@@ -37,6 +48,8 @@ struct MainTabView: View {
             
             SettingsView()
                 .environmentObject(locationManager)
+                .environmentObject(biometricAuthService)
+                .environmentObject(mediaRecordingService)
                 .tabItem {
                     Image(systemName: "gear")
                     Text("Настройки")
