@@ -187,23 +187,6 @@ This app requests the following permissions:
 
 ---
 
-## **Development Guide**
-
-### **Adding New Features**
-
-1. Create new model in `Models/`
-2. Add logic in `Services/`
-3. Build UI in `Views/`
-4. Update `MainTabView.swift` as needed
-
-### **Testing**
-
-- Use simulator for UI testing
-- Test location features on real devices
-- Verify background execution
-
----
-
 ## **License**
 
 © 2025 SafeZone Team. All rights reserved.
