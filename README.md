@@ -1,7 +1,5 @@
-blob:https://web.whatsapp.com/ead4435d-ebe1-4eb9-84eb-abef9b2d39d0
-<img width="370" height="800" alt="image" src="https://github.com/user-attachments/assets/632286d0-9e07-4b94-a56b-1d27bb607d21" />
-blob:https://web.whatsapp.com/1cc4f95f-662f-45fc-9e39-c7a72c40297d
-<img width="370" height="800" alt="image" src="https://github.com/user-attachments/assets/52ea0962-3dff-4e9d-9c7f-9afbc6d6ac4d" />
+blob:https://web.whatsapp.com/ead4435d-ebe1-4eb9-84eb-abef9b2d39d0<img width="370" height="800" alt="image" src="https://github.com/user-attachments/assets/632286d0-9e07-4b94-a56b-1d27bb607d21" />
+blob:https://web.whatsapp.com/1cc4f95f-662f-45fc-9e39-c7a72c40297d<img width="370" height="800" alt="image" src="https://github.com/user-attachments/assets/52ea0962-3dff-4e9d-9c7f-9afbc6d6ac4d" />
 blob:https://web.whatsapp.com/e98b81db-7052-4af6-ac61-c6893645076d<img width="370" height="800" alt="image" src="https://github.com/user-attachments/assets/f4c60ca9-173a-4825-b3ea-03df80279072" />
 blob:https://web.whatsapp.com/facc89ca-d393-4b20-9d5c-a1c177b879d7<img width="370" height="800" alt="image" src="https://github.com/user-attachments/assets/8743e171-3c54-4bca-9780-301d664b4c90" />
 blob:https://web.whatsapp.com/bd067923-71e3-4f8a-b82d-a7657eac8905<img width="370" height="800" alt="image" src="https://github.com/user-attachments/assets/ab29a996-d733-4102-ae9b-9fd644d98c87" />
